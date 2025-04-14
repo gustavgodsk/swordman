@@ -100,7 +100,6 @@
 
   function update(){
     if (game.isPaused) return;
-    console.log("update")
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     groundCtx.clearRect(0, 0, canvas.width, canvas.height);
