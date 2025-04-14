@@ -57,9 +57,13 @@
   <div class="w-full grid">
     <div class="min-w-1/2 w-1/2 justify-self-center self-end grid-rows-2 justify-center gap-2">
       <div class="justify-self-center w-full">
+        {#key game.time}
+          
         {#each player.weapons as weapon}
           <Icon {weapon}/>
          {/each}
+        {/key}
+
       </div>
       <div class="flex justify-center w-full gap-2">
         <p>{player.level}</p>

@@ -16,10 +16,10 @@
   let chosenI = $state(null);
 
   onMount(()=>{
-    sounds.push(audio.soundManager.play('levelup', { volume: 0.5 }));
+    sounds.push(audio.soundManager.play('levelup', { volume: 0.1 }));
     // sounds.push(audio.soundManager.play('victoryhorn', { volume: 0.5 }));
     generateLevelScreen();
-      
+    
 
     // console.log(skillPool.pool)
 

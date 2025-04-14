@@ -12,7 +12,7 @@
   import {drawVector, drawLine, drawCircle, drawPolygon, checkCollision, calculateDistance} from "$lib/stores/helperFunctions";
   import { canvasContext, groundOffset } from "$lib/stores/canvasStore";
   import {gameText} from "$lib/stores/gameText"
-  import { skillPool, Upgrade } from "$lib/stores/skillPool.svelte";
+  import { skillPool, StatUpgrade, LevelUp, FirstTimePickUp } from "$lib/stores/skillPool.svelte";
   import { audio } from '$lib/audio/AudioManager.svelte';
 
 
@@ -23,7 +23,7 @@
   let ground;
   let player = $state(false);
   // let ground;
-  let width, height;
+  let width = $state(0), height = $state(0);
   // Track which keys are currently pressed
   const keys = {
     w: false,
@@ -284,16 +284,20 @@
 
     init(){
       this.AddWeapon(new Sword("Sword"));
-      this.AddWeapon(new FrostNova("FrostNova"));
       this.AddWeapon(new Dash("Dash"));
-      this.AddWeapon(new Electrocute("Electrocute"));
 
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Damage", "Increase damage by 10%", "damageModifier", 0.10))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "HP", "Increase max health by 40 points", "maxHealth", 40))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Movement Speed", "Increase movement speed by 1", "speed", 1))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Pickup Range", "Increase pickup range by 50", "pickupRange", 50))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Lifesteal", "Increase lifesteal by 5%", "lifeSteal", 0.05))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Health Regen", "Increase health regeneration by 0.05", "healthRegen", 0.05))
+      let frostNova = new FrostNova("FrostNova");
+      frostNova.AddToSkillPool();
+
+      let electrocute = new Electrocute("Electrocute");
+      electrocute.AddToSkillPool();
+
+      skillPool.pool.push(new StatUpgrade(this, "Damage", this.upgradeType, "Increase damage by 10%", "damageModifier", 0.10))
+      skillPool.pool.push(new StatUpgrade(this, "HP", this.upgradeType, "Increase max health by 40 points", "maxHealth", 40))
+      skillPool.pool.push(new StatUpgrade(this, "Movement Speed", this.upgradeType, "Increase movement speed by 1", "speed", 1))
+      skillPool.pool.push(new StatUpgrade(this, "Pickup Range", this.upgradeType, "Increase pickup range by 50", "pickupRange", 50))
+      skillPool.pool.push(new StatUpgrade(this, "Lifesteal", this.upgradeType, "Increase lifesteal by 5%", "lifeSteal", 0.05))
+      skillPool.pool.push(new StatUpgrade(this, "Health Regen", this.upgradeType, "Increase health regeneration by 0.05", "healthRegen", 0.05))
       // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Size", "Increase size by 10", "radius", 10))
     }
 
@@ -791,7 +795,7 @@
       super(name);
       this.image = enemyImages.goblin
       this.color = "#479e48"
-      this.xp.amount = 200;
+      this.xp.amount = 30;
     }
   }
 
@@ -976,6 +980,7 @@
   class Weapon {
     constructor(name){
       this.name = name;
+      this.description = "Deadly weapon description"
       this.level = 1;
       this.baseDamage = 0;
       this.damageModifier = 1;
@@ -1008,6 +1013,15 @@
 
     init(){
 
+    }
+
+    AddToSkillPool(){
+      let skillCardInfo = new FirstTimePickUp(player, this.name, this.upgradeType, this.description, this);
+      skillPool.pool.push(skillCardInfo)
+    }
+
+    LevelUp(){
+      this.level += 1;
     }
 
     Update(){
@@ -1128,19 +1142,28 @@
 
     init(){
       super.init()
-      this.AddAugment(new AUGMENT.ShootFireballs(1));
+      this.AddAugment(new AUGMENT.ShootFireballs(0));
 
       //add upgrades to skillpool
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Attack Speed", "Increase attack speed by 13", "cooldown", -13, {
-        cap: this.minCooldown,
-        direction: "min",
-        dependencies: ["duration"]
-      }))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Knockback", "Increase knockback by 1", "knockback", 1))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Size", "Increase weapon size by 35%", "size", 0.35))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Damage", "Increase base weapon damage by 40%", "damageModifier", 0.4))
+      //   ---INDIVIDUAL STAT UPGRADES
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Attack Speed", "Increase attack speed by 13", "cooldown", -13, {
+      //   cap: this.minCooldown,
+      //   direction: "min",
+      //   dependencies: ["duration"]
+      // }))
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Knockback", "Increase knockback by 1", "knockback", 1))
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Size", "Increase weapon size by 35%", "size", 0.35))
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Damage", "Increase base weapon damage by 40%", "damageModifier", 0.4))
 
+    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of sword by 1"))
+    }
 
+    LevelUp(){
+      super.LevelUp();
+      this.cooldown -= 10;
+      this.knockback += 0.5;
+      this.size += 0.3;
+      this.damageModifier += 0.4;
     }
 
     _FireImplementation(){
@@ -1205,13 +1228,23 @@
     }
 
     init(){
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Radius", "Increase radius by 100", "radius", 100))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Effect Duration", "Increase effect duration by 0.5s", "effectDuration", 500))
-      skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Cooldown", "Decrease cooldown by 75", "cooldown", -75, {
-        cap: this.minCooldown,
-        direction: "min",
-        dependencies: []
-      }))
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Radius", "Increase radius by 100", "radius", 100))
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Effect Duration", "Increase effect duration by 0.5s", "effectDuration", 500))
+      // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Cooldown", "Decrease cooldown by 75", "cooldown", -75, {
+      //   cap: this.minCooldown,
+      //   direction: "min",
+      //   dependencies: []
+      // }))
+
+      skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of FrostNova by 1"))
+
+    }
+
+    LevelUp(){
+      super.LevelUp();
+      this.radius += 50;
+      this.effectDuration += 250;
+      this.cooldown -= 75;
     }
 
     _FireImplementation(){
@@ -1294,6 +1327,8 @@
           this.Fire();
         }
       })
+
+      
     }
 
     _FireImplementation(){
@@ -1358,21 +1393,23 @@
       this.color = "#60b5ff"
       this.baseDamage = 5;
       this.knockback = 1;
-      this.amount = 20;
-      this.bounce = 50;
+      this.amount = 1;
+      this.bounce = 1;
       this.electrocutes = [];
-      this.cooldown = 40;
-      this.duration = 30;
+      this.cooldown = 100;
+      this.duration = 50;
       this.chainDelay = 20;
 
     }
 
     init(){
       super.init()
+      skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of electrocute by 1"))
+
     }
 
     LevelUp(){
-      this.level += 1;
+      super.LevelUp();
       this.amount += 1;
       this.bounce += 2;
       this.cooldown -= 15;

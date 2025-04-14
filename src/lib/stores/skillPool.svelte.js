@@ -3,16 +3,27 @@
 export const skillPool = $state({
   pool: [],
   reset: function(){
-    this.pool = []
+    this.pool = [] 
   }
 })
 
-export class Upgrade{
-  constructor(target = null, upgradeType = null, name = "Name", description = "", stats = [], amounts = [], limits = false){
+class SkillCardInfo{
+  constructor(target = null, name = "Name", upgradeType = "upgradeType", description = "Description"){
     this.target = target;
-    this.upgradeType = upgradeType;
     this.name = name;
+    this.upgradeType = upgradeType;
     this.description = description;
+  }
+
+  RemoveFromSkillPool(){
+    skillPool.pool.splice(skillPool.pool.indexOf(this), 1)
+  }
+
+}
+
+export class StatUpgrade extends SkillCardInfo {
+  constructor(target, name, upgradeType, description, stats = [], amounts = [], limits = false){
+    super(target, name, upgradeType, description)
     this.stats = stats;
     this.amounts = amounts;
     this.limits = limits;
@@ -30,7 +41,7 @@ export class Upgrade{
           });
 
           //remove from skillpool since cap is reached
-          skillPool.pool.splice(skillPool.pool.indexOf(this), 1)
+          super.RemoveFromSkillPool();
         } else if (this.limits.direction == "max"){
 
         }
@@ -39,13 +50,13 @@ export class Upgrade{
   }
 }
 
-export class AugmentLevelUp extends Upgrade {
-  constructor(target = null, upgradeType = null, name = "Name", description = "", stats = [], amounts = []){
-    super(target, upgradeType, name, description, stats);
+export class LevelUp extends SkillCardInfo {
+  constructor(target, name, upgradeType, description){
+    super(target, name, upgradeType, description);
   }
 
   Apply(){
-    this.target.LevelUp(1);
+    this.target.LevelUp();
   }
 }
 
@@ -60,4 +71,18 @@ export function chooseSkillsFromSkillPool(amount = 3){
     }
   }
   return randomValues;
+}
+
+export class FirstTimePickUp extends SkillCardInfo{
+  constructor(target, name, upgradeType, description, item){
+    super(target, name, upgradeType, description)
+    this.item = item;
+  }
+
+  Apply(){
+    this.target.AddWeapon(this.item);
+    super.RemoveFromSkillPool();
+    // let levelUpCard = new LevelUp(this.item, this.name, this.upgradeType, "level up by 1");
+    // skillPool.pool.push(levelUpCard)
+  }
 }

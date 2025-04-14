@@ -3,23 +3,23 @@ import {drawCircle, checkCollision} from "./helperFunctions"
 import { canvasContext, groundOffset } from "./canvasStore";
 import { get } from 'svelte/store';
 import { game } from "./gameController.svelte";
-import { AugmentLevelUp, skillPool } from "./skillPool.svelte";
+import { LevelUp, skillPool } from "./skillPool.svelte";
 import { audio } from "$lib/audio/AudioManager.svelte";
 
 class Augment {
   constructor(){
     this.name = "Augment";
     this.upgradeType = "Augment";
-
+    this.level = 1;
   }
 
   init(){
-    skillPool.pool.push(new AugmentLevelUp(this, this.upgradeType, this.name, "Increase level of augment by 1", 1))
+    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of augment by 1"))
 
   }
-  
-  AddToSkillPool(){
 
+  LevelUp(amount = 1){
+    this.level += amount;
   }
 }
 
@@ -28,7 +28,7 @@ export class ShootFireballs extends Augment {
     super();
     this.name = "ShootFireballs";
     this.level = level;
-    this.amount = 1;
+    this.amount = 0;
     this.damageModifier = 1;
     this.baseDamage = 1;
     this.baseSpeed = 5;
@@ -164,8 +164,8 @@ export class ShootFireballs extends Augment {
     return {amount, damageModifier, speed, radius}
   }
 
-  LevelUp(amount){
-    this.level += amount;
+  LevelUp(amount = 1){
+    super.LevelUp(amount)
     let levelChanges = this.EvaluateLevel(this.level);
     this.ApplyLevelChanges(levelChanges)
   }
