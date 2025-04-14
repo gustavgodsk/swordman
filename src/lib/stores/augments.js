@@ -4,6 +4,7 @@ import { canvasContext, groundOffset } from "./canvasStore";
 import { get } from 'svelte/store';
 import { game } from "./gameController.svelte";
 import { AugmentLevelUp, skillPool } from "./skillPool.svelte";
+import { audio } from "$lib/audio/AudioManager.svelte";
 
 class Augment {
   constructor(){
@@ -36,6 +37,7 @@ export class ShootFireballs extends Augment {
     this.radius = 15;
     this.fireballs = [];
     this.direction = null;
+    this.firstHit = false;
 
     this.fireball = class Fireball{
       constructor(index, parent){
@@ -117,6 +119,13 @@ export class ShootFireballs extends Augment {
           const enemy = new SAT.Circle(new SAT.Vector(e.x, e.y), e.radius);
           return checkCollision(weapon, enemy)
         })
+
+        if (hits.length > 0 && !this.parent.firstHit) {
+          // Only set firstHit to true the first time ANY fireball hits
+          this.parent.firstHit = true;
+          // Play the sound immediately on the first hit
+          audio.soundManager.play("flame", {volume: 0.5});
+        }
   
         hits.filter(e => {
           // if (this.continuousDamage){
@@ -176,6 +185,8 @@ export class ShootFireballs extends Augment {
   }
 
   SpawnNewFireballs(weapon){
+    this.firstHit = false;
+    audio.soundManager.play("fireball", {volume: 0.3})
     //add new fireballs
     for (let i = 0; i < this.amount; i++){
       let fireball = new this.fireball(i, this);

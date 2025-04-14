@@ -13,6 +13,8 @@
   import { canvasContext, groundOffset } from "$lib/stores/canvasStore";
   import {gameText} from "$lib/stores/gameText"
   import { skillPool, Upgrade } from "$lib/stores/skillPool.svelte";
+  import { audio } from '$lib/audio/AudioManager.svelte';
+
 
   let training = true;
 
@@ -51,7 +53,6 @@
 
 
   onMount(() => {
-
     resizeCanvas(); // Set the canvas size initially
 
     setup();
@@ -67,14 +68,19 @@
     };
   });
 
+  
+
   function setup(){
     ctx = canvas.getContext('2d');
     canvasContext.set(ctx);
     groundCtx = ground.getContext('2d');
+    
+
     startGame();
   }
 
   function startGame(){
+    audio.musicManager.start();
     game.reset();
     skillPool.reset();
     player = new Player();
@@ -431,6 +437,7 @@
     }
 
     TakeDamage(amount){
+      audio.soundManager.play('playerhit', { volume: 0.5 });
       let takenDamage = amount;
       this.health -= takenDamage;
 
@@ -784,7 +791,7 @@
       super(name);
       this.image = enemyImages.goblin
       this.color = "#479e48"
-      this.xp.amount = 30;
+      this.xp.amount = 200;
     }
   }
 
@@ -976,6 +983,7 @@
       this.autoFire = true;
       this.size = 1;
       this.enemiesHit = new Array();
+      this.firstHit = false;
       this.isActive = false;
       this.baseCooldown = 100;
       this.cooldown = 100;
@@ -1019,9 +1027,15 @@
 
       this.timeLeft = (game.time - this.startTime) / this.cooldown * this.baseCooldown;
       // console.log(this.timeLeft)
+
+      if (!this.firstHit && this.enemiesHit.length > 0){
+        audio.soundManager.play('sword-slash', { volume: 0.5 });
+        this.firstHit = true;
+      }
     }
 
     Fire(){
+      this.firstHit = false;
 
       for (const hook of this.hooks.beforeFire){
         hook(this);
@@ -1129,6 +1143,11 @@
 
     }
 
+    _FireImplementation(){
+      super._FireImplementation();
+      audio.soundManager.play('sword', { volume: 0.5 });
+    }
+
     SATObject(x,y){
        // Create a polygon for a simple sword shape
       let sword = new SAT.Polygon(
@@ -1193,6 +1212,11 @@
         direction: "min",
         dependencies: []
       }))
+    }
+
+    _FireImplementation(){
+      audio.soundManager.play("icicles", {volume:1})
+      super._FireImplementation();
     }
 
     Draw(){
@@ -1334,11 +1358,11 @@
       this.color = "#60b5ff"
       this.baseDamage = 5;
       this.knockback = 1;
-      this.amount = 1;
-      this.bounce = 1;
+      this.amount = 20;
+      this.bounce = 50;
       this.electrocutes = [];
-      this.cooldown = 80;
-      this.duration = 50;
+      this.cooldown = 40;
+      this.duration = 30;
       this.chainDelay = 20;
 
     }
@@ -1370,7 +1394,9 @@
     }
 
     _FireImplementation(){
+      audio.soundManager.play('electrocute', { volume: 5 });
       super._FireImplementation();
+      
       let enemiesToHit = this.FindEnemiesToHit()
 
       enemiesToHit.forEach(element => {
@@ -1442,7 +1468,6 @@
     }
 
     ProcessBounce(source, remainingBounces, hitList) {
-      console.log(remainingBounces)
       // Find the nearest enemy that hasn't been hit yet
       let nextTarget = this.FindNearestUnhitEnemy(source, hitList);
       
@@ -1511,17 +1536,15 @@
 </div>
 
 <Overlay {player}/>
-{#key player.skillPoints}
 
 {#if game.screen.levelUp === true}
   
-<div class="w-screen h-screen absolute" in:fade out:fade={{duration: 200}}>
+<div class="w-screen h-screen absolute" in:fade out:fade={{duration: 100}}>
   <LevelUpScreen {player} {startAnimation}/>
 
 </div>
 
 {/if}
-{/key}
 
 {#if game.gameOver}
 <div class="absolute w-screen h-screen flex flex-col items-center justify-center z-10">

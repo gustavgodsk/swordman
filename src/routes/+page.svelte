@@ -5,13 +5,36 @@
 
   import {gameState} from "$lib/stores/gameState.svelte"
   import { fade } from "svelte/transition";
+  import { audio } from '$lib/audio/AudioManager.svelte';
+  import { onMount, onDestroy } from "svelte";
 
+  // let audioManager = $state();
+  let isReady = $state(false);
 
+  onMount(async ()=>{
+    // Initialize audio system
+    // audioManager = new AudioManager();
+    audio.init();
+    await audio.soundManager.init();
+    await audio.musicManager.init();
+
+    isReady = true;
+  })
+
+  onDestroy(()=>{
+    //Clean up audio resources
+    if (audio.soundManager) {
+      audio.soundManager.dispose();
+    }
+    if (audio.musicManager) {
+      audio.musicManager.stop();
+    }
+  })
 </script>
 
 {#if gameState.value === 0}
 <div>
-  <StartMenu/>
+  <StartMenu {isReady}/>
 </div>
 {:else if gameState.value === 1}
   <div class="h-full w-full min-h-screen min-w-screen overflow-hidden relative bg-gray-700">
