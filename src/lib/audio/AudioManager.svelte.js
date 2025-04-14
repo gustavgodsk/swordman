@@ -38,6 +38,7 @@ export class SoundManager {
       this.loadSound('playerhit', '/audio/playerhit.mp3'),
       this.loadSound('flame', '/audio/flame.ogg'),
       this.loadSound('icicles', '/audio/icicles.wav'),
+      this.loadSound('experience', '/audio/experience.mp3'),
     ]);
 
     // Set initial volume
@@ -273,6 +274,7 @@ export class MusicManager {
       return;
     }
     
+    this.currentTrackIndex = 0; //start from beginning
     this.isPlaying = true;
     this.playCurrentTrack();
   }

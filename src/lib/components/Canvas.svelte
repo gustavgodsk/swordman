@@ -14,6 +14,7 @@
   import {gameText} from "$lib/stores/gameText"
   import { skillPool, StatUpgrade, LevelUp, FirstTimePickUp } from "$lib/stores/skillPool.svelte";
   import { audio } from '$lib/audio/AudioManager.svelte';
+  import EndScreen from "./EndScreen.svelte";
 
 
   let training = true;
@@ -89,8 +90,17 @@
     update();
   }
 
+  function restartGame(){
+    audio.musicManager.stop();
+    player.weapons.forEach(element => {
+      element.destroy();
+    });
+    startGame();
+  }
+
   function update(){
     if (game.isPaused) return;
+    console.log("update")
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     groundCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -437,6 +447,7 @@
     }
 
     Kill(){
+      audio.musicManager.stop();
       game.gameOver = true;
     }
 
@@ -954,6 +965,7 @@
 
     Consume(){
       player.AddXP(this.amount);
+      audio.soundManager.play("experience", {volume: 0.1})
       game.deadExperience.push(this)
     }
 
@@ -1009,6 +1021,8 @@
         afterFire: [],
         update: []
       }
+      this.controller = new AbortController();
+      this.signal = this.controller.signal;
     }
 
     init(){
@@ -1043,7 +1057,7 @@
       // console.log(this.timeLeft)
 
       if (!this.firstHit && this.enemiesHit.length > 0){
-        audio.soundManager.play('sword-slash', { volume: 0.5 });
+        // audio.soundManager.play('sword-slash', { volume: 0.5 });
         this.firstHit = true;
       }
     }
@@ -1121,10 +1135,16 @@
       let damage = this.baseDamage * this.damageModifier;
       enemy.TakeDamage(damage)
       this.ApplyOnHitEffects(enemy)
+      audio.soundManager.play('sword-slash', { volume: 0.5 });
+
     }
 
     ApplyOnHitEffects(enemy){
 
+    }
+
+    destroy(){
+      this.controller.abort();
     }
   }
 
@@ -1225,6 +1245,7 @@
       this.duration = 10;
       this.color = "rgba(37, 150, 190,0.2)"
       this.effectDuration = 1000;
+
     }
 
     init(){
@@ -1322,19 +1343,29 @@
 
     init(){
       // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Frost Nova Radius", "Increase radius by 100", "radius", 100))
-      document.addEventListener("keydown", (e) => {
-        if (e.code == "Space" && this.isReady){
-          this.Fire();
-        }
-      })
+      
+      document.addEventListener("keydown",
+        (e)=> this.handleKeyDown(e),
+        {signal: this.signal}
+      )
+
+      // this.eventListeners.push({event: "keydown", fn: this.handleKeyDown})
 
       
+    }
+
+    
+
+    handleKeyDown(e){
+      if (e.code == "Space" && this.isReady){
+        this.Fire();
+      }
     }
 
     _FireImplementation(){
       this.isReady = false;
       this.startTime = game.time;
-      let speed = player.speed;
+      let speed = player.getSpeed();
       player.speed *= 2;
       this.directionWhenCasting = player.faceDirection;
       setTimeout(() => {
@@ -1586,7 +1617,7 @@
 {#if game.gameOver}
 <div class="absolute w-screen h-screen flex flex-col items-center justify-center z-10">
   <h1 class="text-7xl">Game Over!</h1>
-  <button class="text-5xl" onclick={startGame}>Restart Game</button>
+  <EndScreen {restartGame}/>
 </div>
 {/if}
 
