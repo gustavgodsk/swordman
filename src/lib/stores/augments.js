@@ -10,11 +10,12 @@ class Augment {
   constructor(){
     this.name = "Augment";
     this.upgradeType = "Augment";
-    this.level = 1;
+      this.imgSrc = "";
+      this.level = 1;
   }
 
   init(){
-    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of augment by 1"))
+    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of augment by 1", this.imgSrc))
 
   }
 
@@ -27,6 +28,7 @@ export class ShootFireballs extends Augment {
   constructor(level = 1){
     super();
     this.name = "ShootFireballs";
+    this.imgSrc = "fireballs.jpeg";
     this.level = level;
     this.amount = 0;
     this.damageModifier = 1;
@@ -159,8 +161,8 @@ export class ShootFireballs extends Augment {
   EvaluateLevel(level){
     let amount = level;
     let damageModifier = 1 + level*0.3;
-    let speed = this.baseSpeed + 0.7*level;
-    let radius = this.baseRadius + 2*level;
+    let speed = this.baseSpeed + 0.8*level;
+    let radius = this.baseRadius + 2.5*level;
     return {amount, damageModifier, speed, radius}
   }
 
@@ -186,7 +188,7 @@ export class ShootFireballs extends Augment {
 
   SpawnNewFireballs(weapon){
     this.firstHit = false;
-    audio.soundManager.play("fireball", {volume: 0.3})
+    audio.soundManager.play("fireball", {volume: 0.15})
     //add new fireballs
     for (let i = 0; i < this.amount; i++){
       let fireball = new this.fireball(i, this);

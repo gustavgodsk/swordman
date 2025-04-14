@@ -13,6 +13,9 @@
 >
 
   <h2 class="text-xl">{skill.name}</h2>
+  <div>
+    <img src={skill.img} alt="">
+  </div>
   <p class="text-sm">
     {skill.description}
   </p>

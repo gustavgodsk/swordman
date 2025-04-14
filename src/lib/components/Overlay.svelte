@@ -4,13 +4,21 @@
   import Icon from "./Icon.svelte";
 
   let {player} = $props();
+  let tim = $derived.by(
+    formatTime
+  )
 
   function roundedHealth(){
     return Math.round(player.health)
   }
 
   function formatTime(){
+    let gameTime = game.time / 60;
     
+    let minutes = Math.floor(gameTime/60)
+    let seconds = (gameTime - (minutes * 60)).toFixed(1);
+    let zero = seconds < 10 ? "0" : "";
+    return minutes + ":" + zero + seconds;
   }
 
 
@@ -45,7 +53,8 @@
 
       </div>
     <div class="w-min justify-self-center">
-      <p>{(game.time / 60).toFixed(1)}</p>
+      <!-- <p>{(game.time / 60).toFixed(1)}</p> -->
+      <p>{tim}</p>
     </div>
     <div class="w-fit justify-self-end">
       {#key game.time}
@@ -66,11 +75,12 @@
 
       </div>
       <div class="flex justify-center w-full gap-2">
-        <p>{player.level}</p>
+        <p class="text-lg">{player.level}</p>
         <div class="flex-1 w-full relative grid">
           <div class="absolute h-1/2 bg-purple-500 transition-all duration-100 self-center" style="width: {player.experience/player.XPToNextLevel*100}%"></div>
+          <p class="z-10">{player.experience}</p>
         </div>
-        <p>{player.level+1}</p>
+        <p class="text-lg">{player.level+1}</p>
       </div>
     </div>
   </div>

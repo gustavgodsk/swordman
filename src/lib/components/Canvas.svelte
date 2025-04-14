@@ -268,6 +268,7 @@
       this.experience = 0;
       this.skillPoints = 0;
       this.color = "#a82dce"
+      this.imgSrc = "player.jpeg";
       this.lifeSteal = 0.03;
       this.damageModifier = 1;
       this.upgradeType = "Player";
@@ -285,7 +286,7 @@
       this.vx = 0;
       this.vy = 0;
       this.faceDirection = 0;
-      this.pickupRange = 25;
+      this.pickupRange = 50;
       this.weapons = [
         
       ]
@@ -301,12 +302,12 @@
       let electrocute = new Electrocute("Electrocute");
       electrocute.AddToSkillPool();
 
-      skillPool.pool.push(new StatUpgrade(this, "Damage", this.upgradeType, "Increase damage by 10%", "damageModifier", 0.10))
-      skillPool.pool.push(new StatUpgrade(this, "HP", this.upgradeType, "Increase max health by 40 points", "maxHealth", 40))
-      skillPool.pool.push(new StatUpgrade(this, "Movement Speed", this.upgradeType, "Increase movement speed by 1", "speed", 1))
-      skillPool.pool.push(new StatUpgrade(this, "Pickup Range", this.upgradeType, "Increase pickup range by 50", "pickupRange", 50))
-      skillPool.pool.push(new StatUpgrade(this, "Lifesteal", this.upgradeType, "Increase lifesteal by 5%", "lifeSteal", 0.05))
-      skillPool.pool.push(new StatUpgrade(this, "Health Regen", this.upgradeType, "Increase health regeneration by 0.05", "healthRegen", 0.05))
+      skillPool.pool.push(new StatUpgrade(this, "Damage", this.upgradeType, "Increase damage by 10%", this.imgSrc, "damageModifier", 0.10))
+      skillPool.pool.push(new StatUpgrade(this, "HP", this.upgradeType, "Increase max health by 40 points", this.imgSrc, "maxHealth", 40))
+      skillPool.pool.push(new StatUpgrade(this, "Movement Speed", this.upgradeType, "Increase movement speed by 1", this.imgSrc, "speed", 1))
+      skillPool.pool.push(new StatUpgrade(this, "Pickup Range", this.upgradeType, "Increase pickup range by 50", this.imgSrc, "pickupRange", 50))
+      skillPool.pool.push(new StatUpgrade(this, "Lifesteal", this.upgradeType, "Increase lifesteal by 5%", this.imgSrc, "lifeSteal", 0.05))
+      skillPool.pool.push(new StatUpgrade(this, "Health Regen", this.upgradeType, "Increase health regeneration by 0.05", this.imgSrc, "healthRegen", 0.05))
       // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Size", "Increase size by 10", "radius", 10))
     }
 
@@ -852,12 +853,12 @@
       this.color = "#897e77"
       this.radius = 10;
       this.maxHealth = 30;
-      this.speed = 4;
+      this.speed = 3.5;
       this.health = this.maxHealth;
       this.damage = 0.75;
 
       this.xp = {
-        amount: 70,
+        amount: 50,
         color: "#ed6917"
       }
     }
@@ -992,6 +993,7 @@
     constructor(name){
       this.name = name;
       this.description = "Deadly weapon description"
+      this.imgSrc = "";
       this.level = 1;
       this.baseDamage = 0;
       this.damageModifier = 1;
@@ -1029,7 +1031,7 @@
     }
 
     AddToSkillPool(){
-      let skillCardInfo = new FirstTimePickUp(player, this.name, this.upgradeType, this.description, this);
+      let skillCardInfo = new FirstTimePickUp(player, this.name, this.upgradeType, this.description, this.imgSrc, this);
       skillPool.pool.push(skillCardInfo)
     }
 
@@ -1156,6 +1158,7 @@
       this.color = "#d3cbbe"
       this.baseDamage = 10;
       this.knockback = 1;
+      this.imgSrc = "sword.jpeg";
 
     }
 
@@ -1174,15 +1177,15 @@
       // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Size", "Increase weapon size by 35%", "size", 0.35))
       // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Sword Damage", "Increase base weapon damage by 40%", "damageModifier", 0.4))
 
-    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of sword by 1"))
+    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of sword by 1", this.imgSrc))
     }
 
     LevelUp(){
       super.LevelUp();
-      this.cooldown -= 10;
-      this.knockback += 0.5;
-      this.size += 0.3;
-      this.damageModifier += 0.4;
+      this.cooldown -= 5;
+      this.knockback += 0.3;
+      this.size += 0.2;
+      this.damageModifier += 0.3;
     }
 
     _FireImplementation(){
@@ -1237,9 +1240,10 @@
   class FrostNova extends Weapon {
     constructor(name){
       super(name);
-      this.radius = 100;
+      this.radius = 150;
+      this.imgSrc = "frostnova.jpeg";
       this.baseCooldown = 400;
-      this.cooldown = 400;
+      this.cooldown = 250;
       this.minCooldown = 50;
       this.duration = 10;
       this.color = "rgba(37, 150, 190,0.2)"
@@ -1256,7 +1260,7 @@
       //   dependencies: []
       // }))
 
-      skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of FrostNova by 1"))
+      skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of FrostNova by 1", this.imgSrc))
 
     }
 
@@ -1264,7 +1268,7 @@
       super.LevelUp();
       this.radius += 50;
       this.effectDuration += 250;
-      this.cooldown -= 75;
+      this.cooldown -= 50;
     }
 
     _FireImplementation(){
@@ -1338,6 +1342,7 @@
       this.minCooldown = 200;
       this.duration = 200;
       this.isReady = true;
+      this.imgSrc = "dash.jpeg";
     }
 
     init(){
@@ -1421,6 +1426,7 @@
     constructor(name){
       super(name)
       this.color = "#60b5ff"
+      this.imgSrc = "electrocute.jpeg";
       this.baseDamage = 5;
       this.knockback = 1;
       this.amount = 1;
@@ -1434,7 +1440,7 @@
 
     init(){
       super.init()
-      skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of electrocute by 1"))
+      skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of electrocute by 1", this.imgSrc))
 
     }
 
@@ -1442,8 +1448,8 @@
       super.LevelUp();
       this.amount += 1;
       this.bounce += 2;
-      this.cooldown -= 15;
-      this.damageModifier += 0.25
+      this.cooldown -= 5;
+      this.damageModifier += 0.15
     }
 
 
@@ -1606,7 +1612,7 @@
 
 {#if game.screen.levelUp === true}
   
-<div class="w-screen h-screen absolute" in:fade out:fade={{duration: 100}}>
+<div class="w-screen h-screen absolute z-10" in:fade out:fade={{duration: 100}}>
   <LevelUpScreen {player} {startAnimation}/>
 
 </div>

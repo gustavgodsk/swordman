@@ -8,11 +8,12 @@ export const skillPool = $state({
 })
 
 class SkillCardInfo{
-  constructor(target = null, name = "Name", upgradeType = "upgradeType", description = "Description"){
+  constructor(target = null, name = "Name", upgradeType = "upgradeType", description = "Description", img = ""){
     this.target = target;
     this.name = name;
     this.upgradeType = upgradeType;
     this.description = description;
+    this.img = "/items/" + img;
   }
 
   RemoveFromSkillPool(){
@@ -22,8 +23,8 @@ class SkillCardInfo{
 }
 
 export class StatUpgrade extends SkillCardInfo {
-  constructor(target, name, upgradeType, description, stats = [], amounts = [], limits = false){
-    super(target, name, upgradeType, description)
+  constructor(target, name, upgradeType, description, img, stats = [], amounts = [], limits = false){
+    super(target, name, upgradeType, description, img)
     this.stats = stats;
     this.amounts = amounts;
     this.limits = limits;
@@ -51,8 +52,8 @@ export class StatUpgrade extends SkillCardInfo {
 }
 
 export class LevelUp extends SkillCardInfo {
-  constructor(target, name, upgradeType, description){
-    super(target, name, upgradeType, description);
+  constructor(target, name, upgradeType, description, img){
+    super(target, name, upgradeType, description, img);
   }
 
   Apply(){
@@ -74,8 +75,8 @@ export function chooseSkillsFromSkillPool(amount = 3){
 }
 
 export class FirstTimePickUp extends SkillCardInfo{
-  constructor(target, name, upgradeType, description, item){
-    super(target, name, upgradeType, description)
+  constructor(target, name, upgradeType, description, img, item){
+    super(target, name, upgradeType, description, img)
     this.item = item;
   }
 
