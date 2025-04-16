@@ -3,8 +3,9 @@ import { skillPool, LevelUp, FirstTimePickUp } from "./skillPool.svelte";
 import { game } from "./gameController.svelte";
 import { audio } from "$lib/audio/AudioManager.svelte";
 import SAT from "sat";
-import {drawVector, drawLine, drawCircle, drawPolygon, checkCollision, calculateDistance} from "$lib/stores/helperFunctions.svelte";
+import {drawVector, drawLine, drawCircle, drawPolygon, checkCollision, calculateDistance, enemiesWithDistance} from "$lib/stores/helperFunctions.svelte";
 import { read } from "$app/server";
+import { joystick } from "./joystick.svelte";
 
 let ctx;
 
@@ -406,6 +407,10 @@ export class Dash extends Weapon {
       hook(this);
     }
 
+    if (joystick.buttons[2]?.pressed === true && this.isReady){
+      this.Fire();
+    }
+
     //if ready
     // if ((game.time % this.cooldown) / this.cooldown <= this.duration/this.baseCooldown){
     //   if (!this.isActive){
@@ -505,24 +510,14 @@ export class Electrocute extends Weapon {
   FindEnemiesToHit() {
     if (game.enemies.length == 0) return [];
     let numberOfEnemiesToHit = this.amount;
-    let point1 = {x: this.x, y: this.y};
     
-    // Calculate distance for all enemies
-    let enemiesWithDistance = game.enemies.map((enemy) => {
-      let point2 = {x: enemy.x, y: enemy.y}; // Fixed: was using e.x twice
-      let distance = calculateDistance(point1, point2);
-      return {target: enemy, dist: distance};
-    });
+    let enemiesWithDistanceArray = enemiesWithDistance(this.x,this.y, true)
 
-    
-    // Sort enemies by distance (closest first)
-    enemiesWithDistance.sort((a, b) => a.dist - b.dist);
-    
     // Take the closest enemy
-    let closestEnemies = [enemiesWithDistance[0]];
+    let closestEnemies = [enemiesWithDistanceArray[0]];
 
     // Remove the closest enemy from potential targets
-    let remainingEnemies = enemiesWithDistance.slice(1);
+    let remainingEnemies = enemiesWithDistanceArray.slice(1);
 
     // Randomly select the rest
     for (let i = 1; i < numberOfEnemiesToHit && remainingEnemies.length > 0; i++) {
@@ -602,20 +597,23 @@ export class Wand extends Weapon {
     this.cooldown = 150;
     this.baseCooldown = 150;
     this.duration = 50;
-    this.baseDamage = 20;
-    this.pierce = 1;
+    this.baseDamage = 15;
+    this.projectileDuration = 800;
+    this.pierce = 2;
     this.radius = 6;
     this.speed = 5;
     this.color = "#f0ffb7"
     this.continuousDamage = false;
     this.projectiles = [];
     this.projectile = class Projectile{
-      constructor(parent, x, y){
+      constructor(parent, x, y, vx, vy){
         this.parent = parent;
         this.x = x;
         this.y = y;
-        this.duration = 500;
+        this.duration = parent.projectileDuration;
         this.enemiesHit = [];
+        this.vx = vx;
+        this.vy = vy;
       }
 
       init(){
@@ -637,9 +635,8 @@ export class Wand extends Weapon {
       }
 
       Move(){
-        const xy = this.CalculateDirection();
-        this.x += xy.vx + this.parent.holder.vx;
-        this.y += xy.vy + this.parent.holder.vy;
+        this.x += this.vx + this.parent.holder.vx;
+        this.y += this.vy + this.parent.holder.vy;
 
         const circle = new SAT.Circle(new SAT.Vector(this.x,this.y), this.parent.radius)
 
@@ -655,19 +652,6 @@ export class Wand extends Weapon {
         drawCircle(ctx, circle, this.parent.color);
         this.CheckEnemyHits(circle)
       } 
-
-      CalculateDirection(i){
-        let dir = this.parent.directionWhenCasting;
-
-        //calculate main angle
-        let angle = dir * Math.PI/2 - Math.PI/2;
-
-        let vx = Math.cos(angle) * this.parent.speed;
-        let vy = Math.sin(angle) * this.parent.speed;
-        return {
-          vx, vy
-        }
-      }
 
       CheckEnemyHits(weapon) {
         let hits = game.enemies.filter((e)=>{
@@ -711,6 +695,9 @@ export class Wand extends Weapon {
   LevelUp(){
     super.LevelUp();
     this.cooldown -= 20;
+    this.pierce += 1;
+    this.damageModifier += 0.25
+    this.projectileDuration += 200;
   }
 
   Draw(){
@@ -727,8 +714,33 @@ export class Wand extends Weapon {
 
   _FireImplementation(){
     super._FireImplementation();
-    let projectile = new this.projectile(this, this.x, this.y)
+    let v = this.CalculateVelocityDirection();
+    let projectile = new this.projectile(this, this.x, this.y, v.x, v.y)
     projectile.init();
     this.projectiles.push(projectile)
   }
+
+  CalculateVelocityDirection(){
+    if (game.enemies.length === 0){
+      return {
+        x: 0,
+        y: 0
+      }
+    }
+    let enemiesWithDistSorted = enemiesWithDistance(this.x, this.y, true);
+
+
+    let closestEnemy = enemiesWithDistSorted[0];
+
+    const directionX = closestEnemy.target.x - this.x
+    const directionY = closestEnemy.target.y - this.y
+    const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+
+    let v = {x :0,y: 0}
+    v.x = (directionX / distance) * this.speed;
+    v.y = (directionY / distance) * this.speed;
+
+    return v;
+  }
+
 }

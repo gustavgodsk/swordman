@@ -229,13 +229,13 @@ export class MusicManager {
     this.currentSource = null;
     this.isPlaying = false;
     this.crossfadeDuration = 2; // seconds for crossfade
-    this.volume = 0.5; // default music volume
+    this.volume = 0.3; // default music volume
   }
 
   async init(){
     await this.loadTracks([
-      '/audio/music/beepbox1.mp3',
-      '/audio/music/beepbox2.mp3',
+      // '/audio/music/beepbox1.mp3',
+      // '/audio/music/beepbox2.mp3',
       '/audio/music/title.wav',
       '/audio/music/crystalcave.mp3',
       '/audio/music/level1.wav',

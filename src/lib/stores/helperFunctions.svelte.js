@@ -1,4 +1,5 @@
 import * as SAT from "sat";
+import { game } from "./gameController.svelte";
 
 export const ctx2 = $state({
   context: null
@@ -112,4 +113,24 @@ export function calculateDistance(point1, point2) {
   const dx = point2.x - point1.x;
   const dy = point2.y - point1.y;
   return Math.sqrt(dx * dx + dy * dy);
+}
+
+export function enemiesWithDistance(x,y, sorted = true){
+  if (game.enemies.length == 0) return [];
+  let point1 = {x, y};
+  
+  // Calculate distance for all enemies
+  let enemiesWithDistanceArr = game.enemies.map((enemy) => {
+    let point2 = {x: enemy.x, y: enemy.y}; // Fixed: was using e.x twice
+    let distance = calculateDistance(point1, point2);
+    return {target: enemy, dist: distance};
+  });
+
+  if (sorted === true){
+    // Sort enemies by distance (closest first)
+    enemiesWithDistanceArr.sort((a, b) => a.dist - b.dist);
+  }
+
+  return enemiesWithDistanceArr;
+  
 }

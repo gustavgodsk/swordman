@@ -6,6 +6,7 @@
   import { slide } from "svelte/transition";
     import { chooseSkillsFromSkillPool, skillPool } from "$lib/stores/skillPool.svelte";
     import {audio} from "$lib/audio/AudioManager.svelte"
+    import {joystick} from "$lib/stores/joystick.svelte"
   // import {skillPool} from "$lib/stores/skillPool.svelte"
 
   let {player, startAnimation} = $props();
@@ -13,7 +14,14 @@
   let ready = $state(false);
   let sounds = [];
 
+  let joystickCooldown = 10;
+  let time = $state(0);
+  let skillIsChosen = false;
+
+  let hoveredI = $state(0);
   let chosenI = $state(null);
+
+  let updateReq;
 
   onMount(()=>{
     sounds.push(audio.soundManager.play('levelup', { volume: 0.1 }));
@@ -22,6 +30,7 @@
     
 
     // console.log(skillPool.pool)
+    updateReq = requestAnimationFrame(update)
 
     
 
@@ -37,10 +46,34 @@
       sounds.forEach(element => {
         element.stop();
       });
+
+      cancelAnimationFrame(updateReq)
   })
+
+  function update(){
+    let Xbutton = joystick.buttons[0];
+    if (Xbutton.pressed === true && !skillIsChosen){
+      console.log("choose")
+      skillIsChosen = true;
+      chooseSkill(hoveredI)
+    }
+    if (joystick.x < -0.3 && time > joystickCooldown){
+      changeHover(-1)
+      time = 0;
+    } else if (joystick.x > 0.3 && time > joystickCooldown){
+      changeHover(1)
+      time = 0;
+    }
+
+    time++;
+
+    updateReq = requestAnimationFrame(update)
+  }
 
   function generateLevelScreen(){
     chosenI = null;
+    hoveredI = 0;
+    skillIsChosen = false;
     chosenSkills = chooseSkillsFromSkillPool(3);
 
     ready = true; 
@@ -51,6 +84,26 @@
     if (e.key == 1 || e.key == 2 ||e.key == 3){
       chooseSkill(e.key-1)
     }
+    if (e.key == "d"){
+      changeHover(1)
+    }
+    if (e.key == "a"){
+      changeHover(-1)
+    }
+    if (e.key == "Enter"){
+      chooseSkill(hoveredI)
+    }
+  }
+
+  function changeHover(dir){
+    if (hoveredI + dir < 0){
+      hoveredI = chosenSkills.length - 1;
+    } else if (hoveredI + dir >= chosenSkills.length){
+      hoveredI = 0;
+    } else {
+      hoveredI += dir;
+    }
+    
   }
 
   function chooseSkill(i){
@@ -81,7 +134,7 @@
   <div class="w-[80%] h-[80%] grid grid-cols-3 gap-10" >
     {#each chosenSkills as skill, i}
     <div transition:slide={{duration:200}}>
-      <SkillCard {chooseSkill} {skill} {i} {chosenI}/>
+      <SkillCard {chooseSkill} {skill} {i} {chosenI} {hoveredI}/>
     </div>
     {/each}
   </div>

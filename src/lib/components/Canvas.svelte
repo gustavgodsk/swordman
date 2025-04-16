@@ -16,8 +16,9 @@
   import { audio } from '$lib/audio/AudioManager.svelte';
   import EndScreen from "./EndScreen.svelte";
   import * as WEAPON from "$lib/stores/weapons"
+  import {joystick, handleControllers} from "$lib/stores/joystick.svelte"
 
-
+  let goblinXP = 30;
   let training = true;
 
   let ctx;
@@ -58,7 +59,7 @@
     resizeCanvas(); // Set the canvas size initially
 
     setup();
-
+    
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
@@ -101,6 +102,7 @@
   }
 
   function update(){
+
     if (game.isPaused) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -202,6 +204,8 @@
   function stopAnimation(){
 
   }
+
+ 
 
   class Ground {
     constructor(){
@@ -373,11 +377,20 @@
     this.vy = 0;
     
     // Track which keys are pressed
-    let upPressed = keys.w || keys.ArrowUp;
-    let downPressed = keys.s || keys.ArrowDown;
-    let leftPressed = keys.a || keys.ArrowLeft;
-    let rightPressed = keys.d || keys.ArrowRight;
+    let upPressed = keys.w || keys.ArrowUp || joystick.y < -0.3;
+    let downPressed = keys.s || keys.ArrowDown || joystick.y > 0.3;
+    let leftPressed = keys.a || keys.ArrowLeft || joystick.x < -0.3;
+    let rightPressed = keys.d || keys.ArrowRight || joystick.x > 0.3;
     
+    // Set face direction based on dominant input
+    // This prioritizes the direction with the strongest input
+    if (Math.abs(joystick.y) > Math.abs(joystick.x)) {
+      if (upPressed) this.faceDirection = 0;
+      else if (downPressed) this.faceDirection = 2;
+    } else {
+      if (rightPressed) this.faceDirection = 1;
+      else if (leftPressed) this.faceDirection = 3;
+    }
     // Set face direction based on key press
     if (upPressed) {
       this.faceDirection = 0;
@@ -812,7 +825,7 @@
       super(name);
       this.image = enemyImages.goblin
       this.color = "#479e48"
-      this.xp.amount = 30;
+      this.xp.amount = goblinXP;
     }
   }
 
@@ -822,7 +835,7 @@
       this.image = enemyImages.orc
       this.color = "#245625"
       this.radius = 30;
-      this.maxHealth = 200;
+      this.maxHealth = 100;
       this.health = this.maxHealth;
 
       this.xp = {

@@ -1,11 +1,11 @@
 <script>
   
-  let {chooseSkill, skill, i, chosenI} = $props();
+  let {chooseSkill, skill, i, chosenI, hoveredI} = $props();
 
 </script>
 
 <button 
-  class="cursor-pointer w-full h-full flex flex-col justify-evenly {chosenI == i ? "scale-125 transition-all" : ""}"
+  class="cursor-pointer w-full h-full flex flex-col justify-evenly {chosenI == i ? "scale-125 transition-all" : ""} {hoveredI == i ? "border-10 border-blue-500" : ""}"
   onclick={()=>{chooseSkill(i)}}
   class:bg-green-500={skill.upgradeType === 'Player'}
   class:bg-red-500={skill.upgradeType === 'Weapon'}

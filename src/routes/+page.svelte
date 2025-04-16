@@ -7,9 +7,11 @@
   import { fade } from "svelte/transition";
   import { audio } from '$lib/audio/AudioManager.svelte';
   import { onMount, onDestroy } from "svelte";
+  import {handleControllers, joystick} from "$lib/stores/joystick.svelte"
 
   // let audioManager = $state();
   let isReady = $state(false);
+
 
   onMount(async ()=>{
     // Initialize audio system
@@ -17,6 +19,8 @@
     audio.init();
     await audio.soundManager.init();
     await audio.musicManager.init();
+
+    joystick.req = requestAnimationFrame(handleControllers)
 
     isReady = true;
   })
@@ -29,6 +33,9 @@
     if (audio.musicManager) {
       audio.musicManager.stop();
     }
+
+    cancelAnimationFrame(joystick.req);
+
   })
 </script>
 
