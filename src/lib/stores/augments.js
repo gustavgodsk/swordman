@@ -1,5 +1,5 @@
 import * as SAT from "sat";
-import {drawCircle, checkCollision} from "./helperFunctions"
+import {drawCircle, checkCollision} from "./helperFunctions.svelte"
 import { canvasContext, groundOffset } from "./canvasStore";
 import { get } from 'svelte/store';
 import { game } from "./gameController.svelte";

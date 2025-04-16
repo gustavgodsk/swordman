@@ -78,7 +78,6 @@
         <p class="text-lg">{player.level}</p>
         <div class="flex-1 w-full relative grid">
           <div class="absolute h-1/2 bg-purple-500 transition-all duration-100 self-center" style="width: {player.experience/player.XPToNextLevel*100}%"></div>
-          <p class="z-10">{player.experience}</p>
         </div>
         <p class="text-lg">{player.level+1}</p>
       </div>

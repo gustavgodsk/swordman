@@ -1,8 +1,12 @@
 import * as SAT from "sat";
 
+export const ctx2 = $state({
+  context: null
+})
 
 // Function to draw a SAT.Vector
 export function drawVector(ctx, v, color = '#000', radius = 3) {
+  ctx = ctx2.context;
 
   if (ctx){
     ctx.fillStyle = color;
@@ -13,6 +17,7 @@ export function drawVector(ctx, v, color = '#000', radius = 3) {
 }
 
 export function drawLine(ctx, line, color = 'blue', width = 3) {
+  ctx = ctx2.context;
 
   if (ctx){
     ctx.beginPath();
@@ -27,6 +32,7 @@ export function drawLine(ctx, line, color = 'blue', width = 3) {
 
 // Function to draw a SAT.Circle
 export function drawCircle(ctx, circle, color = "blue") {
+  ctx = ctx2.context;
   if (ctx){
 
     ctx.fillStyle = color;
@@ -42,6 +48,7 @@ export function drawCircle(ctx, circle, color = "blue") {
 
 // Function to draw a SAT.Polygon with rotation support
 export function drawPolygon(ctx, polygon, color) {
+  ctx = ctx2.context;
   if (ctx){
 
     ctx.fillStyle = color || "yellow";

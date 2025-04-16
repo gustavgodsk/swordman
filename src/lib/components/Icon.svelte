@@ -9,7 +9,10 @@
 
 </script>
 
-<div class="relative w-8 h-8 flex bg-[url(/items/{img})] bg-cover bg-center">
+<div 
+  class="relative w-8 h-8 flex bg-cover bg-center overflow-hidden"
+  style="background-image: url('/items/{img}');"
+>
 <!-- <div class="relative w-fit flex bg-[url(/items/{img})] bg-cover bg-center"> -->
   {#key game.time}
     <div class="absolute bg-blue-500/50 h-full" style="width: {weapon.timeLeft*100/weapon.baseCooldown}%"></div>
