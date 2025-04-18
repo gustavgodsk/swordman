@@ -18,7 +18,7 @@
   import * as WEAPON from "$lib/stores/weapons"
   import {joystick, handleControllers} from "$lib/stores/joystick.svelte"
 
-  let goblinXP = 30;
+  let goblinXP = 25;
   let training = true;
 
   let ctx;
@@ -89,6 +89,18 @@
     skillPool.reset();
     player = new Player();
     player.init();
+    let sword = new WEAPON.Sword(player);
+    sword.AddToSkillPool();
+    let wand = new WEAPON.Wand(player);
+    wand.AddToSkillPool();
+
+    let frostNova = new WEAPON.FrostNova(player);
+    frostNova.AddToSkillPool();
+
+    let electrocute = new WEAPON.Electrocute(player);
+    electrocute.AddToSkillPool();
+    let bow = new WEAPON.Bow(player);
+    bow.AddToSkillPool();
     ground = new Ground();
     update();
   }
@@ -111,13 +123,13 @@
     ground.Draw();
     player.Draw();
 
-    let cdGoblin = Math.max(150 - Math.floor(game.time/50), 10);
+    let cdGoblin = Math.max(200 - Math.floor(game.time/80), 10);
     if (game.time < 15000 && game.time % cdGoblin === 0) {
       let enemy = new Goblin("Goblin");
       enemy.Spawn();
     }
 
-    let cdOrc = Math.max(500 - Math.floor(game.time/30), 30);
+    let cdOrc = Math.max(500 - Math.floor(game.time/20), 30);
     // console.log(cd1,cd2)
 
     if (player.level > 1 && game.time % cdOrc === 0) {
@@ -133,7 +145,7 @@
       enemy.Spawn();
     }
 
-    let cdWolf = Math.max(300 - Math.floor(game.time/900), 100);
+    let cdWolf = Math.max(600 - Math.floor(game.time/50), 100);
     // console.log(cd1,cd2)
 
     if (game.time > 5000 && game.time % cdWolf === 0) {
@@ -142,19 +154,19 @@
       enemy.SpawnPack(packSize, 30, Wolf);
     }
 
-    let cdWarlord = Math.max(300 - Math.floor(game.time/900), 150);
+    let cdWarlord = Math.max(300 - Math.floor(game.time/70), 150);
     // console.log(cd1,cd2)
 
-    if (game.time > 8000 && game.time % cdWolf === 0) {
+    if (game.time > 9000 && game.time % cdWarlord === 0) {
       let enemy = new Warlord("Warlord");
-      let packSize = Math.floor(game.time/5000) + 2;
+      let packSize = Math.floor(game.time/6000) + 2;
       enemy.SpawnPack(packSize, 60, Warlord);
     }
 
-    let cdValkyrie = Math.max(300 - Math.floor(game.time/100), 2);
+    let cdValkyrie = Math.max(300 - Math.floor((game.time - 10000)/40), 20);
     // console.log(cd1,cd2)
 
-    if (game.time > 10000 && game.time % cdWolf === 0) {
+    if (game.time > 10000 && game.time % cdValkyrie === 0) {
       let enemy = new Valkyrie("Valkyrie");
       enemy.Spawn();
     }
@@ -269,24 +281,25 @@
   class Player {
     constructor(){
       this.name = "Player"
-      this.radius = 15;
+      this.radius = 12;
       this.maxHealth = 100;
       this.experience = 0;
       this.skillPoints = 0;
       this.color = "#a82dce"
       this.imgSrc = "player.jpeg";
-      this.lifeSteal = 0.03;
+      this.lifeSteal = 0;
       this.damageModifier = 1;
       this.upgradeType = "Player";
       this.healthRegen = 0.02;
+      this.rerolls = 1;
 
-      this.level = 1;
+      this.level = 0;
       this.currentXP = 0;
       this.XPToNextLevel = this.CalculateXPForNextLevel(this.level);
 
       this.health = this.maxHealth;
       this.criticalHP = false;
-      this.speed = 3;
+      this.speed = 2.5;
       this.x = canvas.width/2;
       this.y = canvas.height/2;
       this.vx = 0;
@@ -301,24 +314,17 @@
     init(){
       // this.AddWeapon(new WEAPON.Sword(this));
       this.AddWeapon(new WEAPON.Dash(this));
-      this.AddWeapon(new WEAPON.Wand(this));
-
-      let sword = new WEAPON.Sword(this);
-      sword.AddToSkillPool();
-
-      let frostNova = new WEAPON.FrostNova(this);
-      frostNova.AddToSkillPool();
-
-      let electrocute = new WEAPON.Electrocute(this);
-      electrocute.AddToSkillPool();
+      // this.AddWeapon(new WEAPON.Wand(this));
 
       skillPool.pool.push(new StatUpgrade(this, "Damage", this.upgradeType, "Increase damage by 10%", this.imgSrc, "damageModifier", 0.10))
-      skillPool.pool.push(new StatUpgrade(this, "HP", this.upgradeType, "Increase max health by 40 points", this.imgSrc, "maxHealth", 40))
-      skillPool.pool.push(new StatUpgrade(this, "Movement Speed", this.upgradeType, "Increase movement speed by 1", this.imgSrc, "speed", 1))
-      skillPool.pool.push(new StatUpgrade(this, "Pickup Range", this.upgradeType, "Increase pickup range by 50", this.imgSrc, "pickupRange", 50))
-      skillPool.pool.push(new StatUpgrade(this, "Lifesteal", this.upgradeType, "Increase lifesteal by 5%", this.imgSrc, "lifeSteal", 0.05))
-      skillPool.pool.push(new StatUpgrade(this, "Health Regen", this.upgradeType, "Increase health regeneration by 0.05", this.imgSrc, "healthRegen", 0.05))
+      skillPool.pool.push(new StatUpgrade(this, "HP", this.upgradeType, "Increase max health by 25 points", this.imgSrc, "maxHealth", 25))
+      skillPool.pool.push(new StatUpgrade(this, "Movement Speed", this.upgradeType, "Increase movement speed by 0.25", this.imgSrc, "speed", 0.25))
+      // skillPool.pool.push(new StatUpgrade(this, "Pickup Range", this.upgradeType, "Increase pickup range by 50", this.imgSrc, "pickupRange", 50))
+      skillPool.pool.push(new StatUpgrade(this, "Lifesteal", this.upgradeType, "Increase lifesteal by 1%", this.imgSrc, "lifeSteal", 0.01))
+      skillPool.pool.push(new StatUpgrade(this, "Health Regen", this.upgradeType, "Increase health regeneration by 0.03", this.imgSrc, "healthRegen", 0.03))
       // skillPool.pool.push(new Upgrade(this, this.upgradeType, "Size", "Increase size by 10", "radius", 10))
+
+      this.LevelUp();
     }
 
     Update(){
@@ -353,7 +359,7 @@
       //Health bar
       ctx.beginPath();
       ctx.fillStyle = "red"
-      ctx.rect(this.x - 30, this.y - 40, this.health/this.maxHealth * 60, 5);
+      ctx.rect(this.x - 30, this.y - this.radius-20, this.health/this.maxHealth * 60, 5);
       ctx.fill();
 
       //weapons
@@ -384,22 +390,32 @@
     
     // Set face direction based on dominant input
     // This prioritizes the direction with the strongest input
-    if (Math.abs(joystick.y) > Math.abs(joystick.x)) {
-      if (upPressed) this.faceDirection = 0;
-      else if (downPressed) this.faceDirection = 2;
-    } else {
-      if (rightPressed) this.faceDirection = 1;
-      else if (leftPressed) this.faceDirection = 3;
-    }
+
+    // if (Math.abs(joystick.y) > Math.abs(joystick.x)) {
+    //   if (upPressed) this.faceDirection = 0;
+    //   else if (downPressed) this.faceDirection = 2;
+    // } else {
+    //   if (rightPressed) this.faceDirection = 1;
+    //   else if (leftPressed) this.faceDirection = 3;
+    // }
+
     // Set face direction based on key press
     if (upPressed) {
       this.faceDirection = 0;
+      if (rightPressed) this.faceDirection = 0.5;
+      if (leftPressed) this.faceDirection = 3.5;
     } else if (rightPressed) {
       this.faceDirection = 1;
+      if (upPressed) this.faceDirection = 0.5;
+      if (downPressed) this.faceDirection = 1.5;
     } else if (downPressed) {
       this.faceDirection = 2;
+      if (rightPressed) this.faceDirection = 1.5;
+      if (leftPressed) this.faceDirection = 2.5;
     } else if (leftPressed) {
       this.faceDirection = 3;
+      if (upPressed) this.faceDirection = 3.5;
+      if (downPressed) this.faceDirection = 2.5;
     }
     
     // Calculate movement direction
@@ -418,51 +434,63 @@
   }
 
     DrawDirection(){
-      ctx.beginPath();
+      // ctx.beginPath();
       
       // Set the arrow properties
-      const arrowLength = 20;
-      const arrowWidth = 10;
+      // const arrowLength = 20;
+      // const arrowWidth = 10;
 
       const x = this.x;
       const y = this.y;
-      ctx.strokeStyle = "yellow"
 
-      switch (this.faceDirection) {
-          case 0: // Up
-              ctx.moveTo(x, y);
-              ctx.lineTo(x, y - arrowLength);
-              ctx.lineTo(x - arrowWidth / 2, y - arrowLength + arrowWidth);
-              ctx.moveTo(x, y - arrowLength);
-              ctx.lineTo(x + arrowWidth / 2, y - arrowLength + arrowWidth);
-              break;
-          case 1: // Right
-              ctx.moveTo(x, y);
-              ctx.lineTo(x + arrowLength, y);
-              ctx.lineTo(x + arrowLength - arrowWidth, y - arrowWidth / 2);
-              ctx.moveTo(x + arrowLength, y);
-              ctx.lineTo(x + arrowLength - arrowWidth, y + arrowWidth / 2);
-              break;
-          case 2: // Down
-              ctx.moveTo(x, y);
-              ctx.lineTo(x, y + arrowLength);
-              ctx.lineTo(x - arrowWidth / 2, y + arrowLength - arrowWidth);
-              ctx.moveTo(x, y + arrowLength);
-              ctx.lineTo(x + arrowWidth / 2, y + arrowLength - arrowWidth);
-              break;
-          case 3: // Left
-              ctx.moveTo(x, y);
-              ctx.lineTo(x - arrowLength, y);
-              ctx.lineTo(x - arrowLength + arrowWidth, y - arrowWidth / 2);
-              ctx.moveTo(x - arrowLength, y);
-              ctx.lineTo(x - arrowLength + arrowWidth, y + arrowWidth / 2);
-              break;
-          default:
-              console.error('Invalid direction');
-              return;
-      }
+      let angle = this.faceDirection * Math.PI / 2 - (Math.PI/2)
 
-      ctx.stroke();
+      const smallCircleX = x + this.radius * Math.cos(angle);
+      const smallCircleY = y + this.radius * Math.sin(angle);
+
+      ctx.beginPath();
+      ctx.arc(smallCircleX, smallCircleY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#3498db';
+      ctx.fill();
+
+
+      // ctx.strokeStyle = "yellow"
+
+      // switch (this.faceDirection) {
+      //     case 0: // Up
+      //         ctx.moveTo(x, y);
+      //         ctx.lineTo(x, y - arrowLength);
+      //         ctx.lineTo(x - arrowWidth / 2, y - arrowLength + arrowWidth);
+      //         ctx.moveTo(x, y - arrowLength);
+      //         ctx.lineTo(x + arrowWidth / 2, y - arrowLength + arrowWidth);
+      //         break;
+      //     case 1: // Right
+      //         ctx.moveTo(x, y);
+      //         ctx.lineTo(x + arrowLength, y);
+      //         ctx.lineTo(x + arrowLength - arrowWidth, y - arrowWidth / 2);
+      //         ctx.moveTo(x + arrowLength, y);
+      //         ctx.lineTo(x + arrowLength - arrowWidth, y + arrowWidth / 2);
+      //         break;
+      //     case 2: // Down
+      //         ctx.moveTo(x, y);
+      //         ctx.lineTo(x, y + arrowLength);
+      //         ctx.lineTo(x - arrowWidth / 2, y + arrowLength - arrowWidth);
+      //         ctx.moveTo(x, y + arrowLength);
+      //         ctx.lineTo(x + arrowWidth / 2, y + arrowLength - arrowWidth);
+      //         break;
+      //     case 3: // Left
+      //         ctx.moveTo(x, y);
+      //         ctx.lineTo(x - arrowLength, y);
+      //         ctx.lineTo(x - arrowLength + arrowWidth, y - arrowWidth / 2);
+      //         ctx.moveTo(x - arrowLength, y);
+      //         ctx.lineTo(x - arrowLength + arrowWidth, y + arrowWidth / 2);
+      //         break;
+      //     default:
+      //         console.error('Invalid direction');
+      //         return;
+      // }
+
+      // ctx.stroke();
     }
 
     Kill(){
@@ -527,11 +555,16 @@
     }
 
     LevelUp(){
-      this.experience -= this.XPToNextLevel;
-        this.level += 1;
-        this.XPToNextLevel = this.CalculateXPForNextLevel(this.level);
-        this.skillPoints++;
+      this.experience = Math.max(0, this.experience - this.XPToNextLevel);
+      this.level += 1;
+      this.XPToNextLevel = this.CalculateXPForNextLevel(this.level);
+      this.skillPoints++;
+      this.pickupRange += 2.5;
 
+      //add reroll every 5th level
+      if (this.level % 5 === 0){
+        this.rerolls++
+      }
 
     }
 
@@ -680,8 +713,8 @@
     Kill(){
       game.deadCount++;
       game.dead.push(this);
-      //0.3% chance to spawn xp attraction orb
-      if (Math.random() < 0.003){
+      //0.1% chance to spawn xp attraction orb
+      if (Math.random() < 0.001){
         let xpOrb = new ExperienceOrb(this.x, this.y);
         xpOrb.Spawn();
       }
@@ -826,6 +859,8 @@
       this.image = enemyImages.goblin
       this.color = "#479e48"
       this.xp.amount = goblinXP;
+      this.radius = 15;
+      this.speed = 1.8;
     }
   }
 
@@ -836,10 +871,11 @@
       this.color = "#245625"
       this.radius = 30;
       this.maxHealth = 100;
+      this.speed = 1.6;
       this.health = this.maxHealth;
 
       this.xp = {
-        amount: 100,
+        amount: 50,
         color: "red"
       }
 
@@ -853,12 +889,12 @@
       this.color = "#4b396a"
       this.radius = 80;
       this.maxHealth = 1000;
-      this.speed = 0.8;
+      this.speed = 1.3;
       this.health = this.maxHealth;
-      this.damage = 2;
+      this.damage = 1.8;
 
       this.xp = {
-        amount: 500,
+        amount: 200,
         color: "#785da8"
       }
 
@@ -872,13 +908,13 @@
       this.color = "#897e77"
       this.radius = 10;
       this.maxHealth = 30;
-      this.speed = 3.5;
+      this.speed = 2.7;
       this.health = this.maxHealth;
       this.damage = 0.75;
 
       this.xp = {
-        amount: 50,
-        color: "#ed6917"
+        amount: 25,
+        color: "#f73800"
       }
     }
 
@@ -892,12 +928,12 @@
       this.color = "#6e8040"
       this.radius = 30;
       this.maxHealth = 300;
-      this.speed = 2;
+      this.speed = 2.2;
       this.health = this.maxHealth;
       this.damage = 2;
 
       this.xp = {
-        amount: 600,
+        amount: 100,
         color: "#9e9d54"
       }
 
@@ -911,13 +947,13 @@
       // this.image = enemyImages.orc
       this.color = "#e470ff"
       this.radius = 50;
-      this.maxHealth = 400;
+      this.maxHealth = 600;
       this.speed = 2.5;
       this.health = this.maxHealth;
       this.damage = 2.5;
 
       this.xp = {
-        amount: 1000,
+        amount: 500,
         color: "#9e9d54"
       }
     }
@@ -945,7 +981,8 @@
 
       ctx.fillStyle = this.color;
       ctx.beginPath();
-      ctx.arc(this.x,this.y, this.radius + (this.amount/100), 0, Math.PI * 2)
+      ctx.arc(this.x,this.y, this.radius, 0, Math.PI * 2)
+      // ctx.arc(this.x,this.y, this.radius + (this.amount/300), 0, Math.PI * 2)
       ctx.fill();
     }
 
@@ -997,7 +1034,7 @@
     constructor(x, y){
       super(x, y);
       this.color = "black";
-      this.radius = 10;
+      this.radius = 20;
     }
 
     Consume(){
@@ -1053,7 +1090,7 @@
 {#if game.screen.levelUp === true}
   
 <div class="w-screen h-screen absolute z-10" in:fade out:fade={{duration: 100}}>
-  <LevelUpScreen {player} {startAnimation}/>
+  <LevelUpScreen {player} {startAnimation} key={player.level}/>
 
 </div>
 

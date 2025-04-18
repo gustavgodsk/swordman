@@ -61,14 +61,26 @@ export class LevelUp extends SkillCardInfo {
   }
 }
 
-export function chooseSkillsFromSkillPool(amount = 3){
+export function chooseSkillsFromSkillPool(amount = 3, skillsToIgnore = [], type = ""){
   let randomValues = [];
   let arr = skillPool.pool;
+  let ignorePrevious = true;
+
+  if (type.length > 0){
+    arr = arr.filter(e => {
+      return e.upgradeType == type;
+    })
+    ignorePrevious = false;
+  }
   while (randomValues.length < amount) {
     let randomIndex = Math.floor(Math.random() * arr.length);
     let randomValue = arr[randomIndex];
     if (!randomValues.includes(randomValue)) {
-      randomValues.push(randomValue);
+      if (ignorePrevious === true  && !skillsToIgnore.includes(randomValue)){
+        randomValues.push(randomValue);
+      } else if (ignorePrevious === false){
+        randomValues.push(randomValue);
+      }
     }
   }
   return randomValues;

@@ -13,6 +13,10 @@
   let chosenSkills = $state([]);
   let ready = $state(false);
   let sounds = [];
+  let triggerUpdate = $state(0)
+  let readyToChoose = false;
+
+  let type = player.level == 1 ? "Weapon" : "";
 
   let joystickCooldown = 10;
   let time = $state(0);
@@ -20,6 +24,7 @@
 
   let hoveredI = $state(0);
   let chosenI = $state(null);
+  let timeSinceLastReroll = 100;
 
   let updateReq;
 
@@ -52,10 +57,12 @@
 
   function update(){
     let Xbutton = joystick.buttons[0];
+    let triangle = joystick.buttons[3];
     if (Xbutton.pressed === true && !skillIsChosen){
-      console.log("choose")
-      skillIsChosen = true;
       chooseSkill(hoveredI)
+    }
+    if (triangle.pressed === true && !skillIsChosen && timeSinceLastReroll > 100){
+      reroll();
     }
     if (joystick.x < -0.3 && time > joystickCooldown){
       changeHover(-1)
@@ -66,6 +73,7 @@
     }
 
     time++;
+    timeSinceLastReroll++;
 
     updateReq = requestAnimationFrame(update)
   }
@@ -74,9 +82,20 @@
     chosenI = null;
     hoveredI = 0;
     skillIsChosen = false;
-    chosenSkills = chooseSkillsFromSkillPool(3);
+    chosenSkills = chooseSkillsFromSkillPool(3, [], type);
 
     ready = true; 
+    setTimeout(() => {
+      readyToChoose = true;
+    }, 200);
+  }
+
+  function reroll(skillsToIgnore = []){
+    if (player.rerolls === 0) return;
+    chosenSkills = chooseSkillsFromSkillPool(3, skillsToIgnore, type);
+    player.rerolls--;
+    triggerUpdate++;
+    timeSinceLastReroll = 0;
   }
 
 
@@ -93,9 +112,13 @@
     if (e.key == "Enter"){
       chooseSkill(hoveredI)
     }
+    if (e.key == "r"){
+      reroll(chosenSkills)
+    }
   }
 
   function changeHover(dir){
+    if (!readyToChoose) return;
     if (hoveredI + dir < 0){
       hoveredI = chosenSkills.length - 1;
     } else if (hoveredI + dir >= chosenSkills.length){
@@ -107,11 +130,14 @@
   }
 
   function chooseSkill(i){
+    if (!readyToChoose) return;
     sounds.push(audio.soundManager.play('scale', { volume: 1 }));
     let skill = chosenSkills[i];
     chosenI = i;
     player.skillPoints -= 1
     skill.Apply();
+    readyToChoose = false
+    skillIsChosen = true;
 
     if (player.skillPoints > 0){
       setTimeout(() => {
@@ -130,7 +156,17 @@
 </script>
 {#if ready}
 
-<div class="w-full h-full bg-gray-800/60 grid items-center justify-items-center">
+
+
+<div class="w-full h-full bg-gray-800/60 flex flex-col items-center justify-evenly py-4">
+  <div class="">
+    {#if player.level == 1}
+    <p class="text-3xl text-gray-200 font-bold">Choose a starter weapon!</p>
+    {:else}
+      <p class="text-3xl text-gray-200 font-bold">Level {player.level}!{player.level % 5 === 0? " (+1 reroll)" : ""}</p>
+    {/if}
+  </div>
+
   <div class="w-[80%] h-[80%] grid grid-cols-3 gap-10" >
     {#each chosenSkills as skill, i}
     <div transition:slide={{duration:200}}>
@@ -138,6 +174,16 @@
     </div>
     {/each}
   </div>
+
+  <div class="">
+    {#key triggerUpdate}
+    <p class="text-lg text-gray-200 font-bold">Rerolls: {player.rerolls}</p>
+    {/key}
+  </div>
 </div>
+
+
+
+
 
 {/if}

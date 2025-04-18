@@ -32,6 +32,7 @@ class Weapon {
     this.knockback = 0;
     this.directionWhenCasting = null;
     this.timeLeft = 0;
+    this.maxLevel = 7;
     this.x = 0;
     this.y = 0;
     this.upgradeType = "Weapon";
@@ -56,8 +57,23 @@ class Weapon {
     skillPool.pool.push(skillCardInfo)
   }
 
+  RemoveFromSkillPool(){
+    let skillCardInfo = skillPool.pool.filter(e => e.name == this.name)
+    let i = skillPool.pool.indexOf(skillCardInfo[0])
+    let removed = skillPool.pool.splice(i,1)
+    console.log(skillCardInfo, i, removed)
+  }
+
   LevelUp(){
     this.level += 1;
+
+    if (this.level == this.maxLevel){
+      this.ReachMaxLevel();
+    }
+  }
+
+  ReachMaxLevel(){
+    this.RemoveFromSkillPool();
   }
 
   Update(){
@@ -159,7 +175,6 @@ class Weapon {
     let damage = this.baseDamage * this.damageModifier;
     enemy.TakeDamage(damage)
     this.ApplyOnHitEffects(enemy)
-    audio.soundManager.play('sword-slash', { volume: 0.5 });
 
   }
 
@@ -180,6 +195,7 @@ export class Sword extends Weapon {
     this.baseDamage = 10;
     this.knockback = 1;
     this.imgSrc = "sword.jpeg";
+    this.name = "Greatsword"
 
   }
 
@@ -202,11 +218,20 @@ export class Sword extends Weapon {
   }
 
   LevelUp(){
-    super.LevelUp();
     this.cooldown -= 5;
     this.knockback += 0.3;
-    this.size += 0.2;
+    this.size += 0.15;
     this.damageModifier += 0.3;
+    super.LevelUp();
+  }
+
+  ReachMaxLevel(){
+    super.ReachMaxLevel();
+    this.cooldown = 35;
+    this.size = 3;
+    this.knockback = 3;
+    this.baseDamage = 15;
+    this.color = "rgba(255, 255, 255, 1)"
   }
 
   _FireImplementation(){
@@ -256,6 +281,11 @@ export class Sword extends Weapon {
   ApplyOnHitEffects(enemy){
     enemy.ApplyKnockback(this.knockback, this.x, this.y) //strength, fromX, fromY
   }
+
+  HitEnemy(enemy){
+    super.HitEnemy(enemy);
+    audio.soundManager.play('sword-slash', { volume: 0.5 });
+  }
 }
 
 export class FrostNova extends Weapon {
@@ -266,9 +296,12 @@ export class FrostNova extends Weapon {
     this.baseCooldown = 400;
     this.cooldown = 250;
     this.minCooldown = 50;
-    this.duration = 10;
+    this.duration = 50;
+    this.baseDamage = 8;
     this.color = "rgba(37, 150, 190,0.2)"
-    this.effectDuration = 1000;
+    this.effectDuration = 500;
+    this.speedReduction = 0.7;
+    this.name = "Frost Nova"
 
   }
 
@@ -286,10 +319,18 @@ export class FrostNova extends Weapon {
   }
 
   LevelUp(){
+    this.radius += 30;
+    this.effectDuration += 100;
+    this.cooldown -= 30;
+    this.speedReduction -= 0.08;
     super.LevelUp();
-    this.radius += 50;
-    this.effectDuration += 250;
-    this.cooldown -= 50;
+  }
+
+  ReachMaxLevel(){
+    super.ReachMaxLevel();
+    this.speedReduction = 0;
+    this.radius = 500;
+    this.effectDuration = 1600
   }
 
   _FireImplementation(){
@@ -316,7 +357,7 @@ export class FrostNova extends Weapon {
   }
 
   HitEnemy(enemy){
-    this.ApplyOnHitEffects(enemy)
+    super.HitEnemy(enemy);
   }
 
   ApplyOnHitEffects(enemy){
@@ -330,11 +371,11 @@ export class FrostNova extends Weapon {
       color: enemy.color
     }
 
-    enemy.speed = 0;
+    enemy.speed *= this.speedReduction;
     enemy.damage = 0;
     enemy.color = this.AddOpacity(values.color, 0.5)
     setTimeout(() => {
-      enemy.statusEffects.splice(enemy.statusEffects.indexOf("Frozen"))
+      enemy.statusEffects.splice(enemy.statusEffects.indexOf("Frozen"),1)
       enemy.speed = values.speed;
       enemy.damage = values.damage;
       enemy.color = values.color;
@@ -364,6 +405,8 @@ export class Dash extends Weapon {
     this.duration = 200;
     this.isReady = true;
     this.imgSrc = "dash.jpeg";
+    this.name = "Dash"
+
   }
 
   init(){
@@ -453,28 +496,42 @@ export class Electrocute extends Weapon {
     this.color = "#60b5ff"
     this.imgSrc = "electrocute.jpeg";
     this.baseDamage = 5;
+    this.levelOneDamage = 8;
     this.knockback = 1;
     this.amount = 1;
     this.bounce = 1;
     this.electrocutes = [];
     this.cooldown = 100;
     this.duration = 50;
-    this.chainDelay = 20;
+    this.chainDelay = 50;
+    this.name = "Electrocute"
+
 
   }
 
   init(){
     super.init()
     skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of electrocute by 1", this.imgSrc))
-
+    this.baseDamage = this.levelOneDamage;
   }
 
   LevelUp(){
-    super.LevelUp();
     this.amount += 1;
     this.bounce += 2;
     this.cooldown -= 5;
-    this.damageModifier += 0.15
+    // this.damageModifier += 0.15
+    this.damageModifier -= 0.12;
+    this.baseDamage = 5;
+    super.LevelUp();
+  }
+
+  ReachMaxLevel(){
+    this.bounce = 40;
+    this.cooldown = 30;
+    this.amount = 10;
+    this.baseDamage = 1.5;
+    this.damageModifier = 1;
+    super.ReachMaxLevel();
   }
 
 
@@ -492,7 +549,7 @@ export class Electrocute extends Weapon {
   }
 
   _FireImplementation(){
-    audio.soundManager.play('electrocute', { volume: 5 });
+    audio.soundManager.play('electrocute', { volume: 10 });
     super._FireImplementation();
     
     let enemiesToHit = this.FindEnemiesToHit()
@@ -551,7 +608,7 @@ export class Electrocute extends Weapon {
     if (remainingBounces > 0){
       setTimeout(() => {
         this.ProcessBounce(target, remainingBounces - 1, hitList)
-      }, 20);
+      }, this.chainDelay);
     }
   }
 
@@ -599,9 +656,10 @@ export class Wand extends Weapon {
     this.duration = 50;
     this.baseDamage = 15;
     this.projectileDuration = 800;
-    this.pierce = 2;
+    this.pierce = 1;
     this.radius = 6;
     this.speed = 5;
+    this.amount = 1;
     this.color = "#f0ffb7"
     this.continuousDamage = false;
     this.projectiles = [];
@@ -638,7 +696,7 @@ export class Wand extends Weapon {
         this.x += this.vx + this.parent.holder.vx;
         this.y += this.vy + this.parent.holder.vy;
 
-        const circle = new SAT.Circle(new SAT.Vector(this.x,this.y), this.parent.radius)
+        const circle = new SAT.Circle(new SAT.Vector(this.x,this.y), this.parent.radius*this.parent.size)
 
         this.Draw(circle);
       }
@@ -672,13 +730,14 @@ export class Wand extends Weapon {
           }
         })
         .forEach(e => {
-          //destroy on pierce hit
-          if (this.enemiesHit.length > this.parent.pierce+1){
-            return this.Destroy();
-          }
+          
           let damage = this.parent.baseDamage * this.parent.damageModifier;
           e.TakeDamage(damage)
           // this.ApplyOnHitEffects(e)
+          //destroy on pierce hit
+          if (this.enemiesHit.length > this.parent.pierce){
+            return this.Destroy();
+          }
         });
       }
     }
@@ -693,11 +752,22 @@ export class Wand extends Weapon {
   }
 
   LevelUp(){
-    super.LevelUp();
     this.cooldown -= 20;
     this.pierce += 1;
     this.damageModifier += 0.25
     this.projectileDuration += 200;
+    this.size += 0.5;
+    super.LevelUp();
+  }
+
+  ReachMaxLevel(){
+    super.ReachMaxLevel();
+    this.pierce = 20;
+    // this.size = 2;
+    // this.speed = 6;
+    this.amount = 3;
+    // this.baseDamage = 20;
+    this.color = "rgba(240,255,183,0.5"
   }
 
   Draw(){
@@ -714,13 +784,23 @@ export class Wand extends Weapon {
 
   _FireImplementation(){
     super._FireImplementation();
-    let v = this.CalculateVelocityDirection();
+    let numberOfEnemiesToFind = this.amount;
+    let vArray = this.CalculateVelocityDirection(numberOfEnemiesToFind);
+    for (let index = 0; index < this.amount; index++) {
+      if (vArray[index]){
+        this.SpawnProjectile(vArray[index])
+      }
+    }
+
+  }
+
+  SpawnProjectile(v){
     let projectile = new this.projectile(this, this.x, this.y, v.x, v.y)
     projectile.init();
     this.projectiles.push(projectile)
   }
 
-  CalculateVelocityDirection(){
+  CalculateVelocityDirection(numberOfEnemiesToFind){
     if (game.enemies.length === 0){
       return {
         x: 0,
@@ -730,17 +810,226 @@ export class Wand extends Weapon {
     let enemiesWithDistSorted = enemiesWithDistance(this.x, this.y, true);
 
 
-    let closestEnemy = enemiesWithDistSorted[0];
+    let closestEnemies = enemiesWithDistSorted.slice(0,numberOfEnemiesToFind);
+    let vArray = [];
 
-    const directionX = closestEnemy.target.x - this.x
-    const directionY = closestEnemy.target.y - this.y
-    const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+    closestEnemies.forEach(element => {
+      const directionX = element.target.x - this.x
+      const directionY = element.target.y - this.y
+      const distance = Math.sqrt(directionX * directionX + directionY * directionY);
 
-    let v = {x :0,y: 0}
-    v.x = (directionX / distance) * this.speed;
-    v.y = (directionY / distance) * this.speed;
+      let v = {x :0,y: 0}
+      v.x = (directionX / distance) * this.speed;
+      v.y = (directionY / distance) * this.speed;
 
-    return v;
+      vArray.push(v);
+    });
+
+    return vArray;
+  }
+
+}
+
+export class Bow extends Weapon {
+  constructor(holder){
+    super(holder);
+    this.name = "Bow"
+    this.imgSrc = "bow.png"
+    this.cooldown = 110;
+    this.baseCooldown = 110;
+    this.duration = 50;
+    this.baseDamage = 8;
+    this.projectileDuration = 800;
+    this.pierce = 0;
+    this.radius = 6;
+    this.spread = 0.05;
+    this.speed = 8;
+    this.volleys = 1;
+    this.amount = 2;
+    this.color = "grey"
+    this.continuousDamage = false;
+    this.projectiles = [];
+    this.projectile = class Projectile{
+      constructor(parent, x, y, vx, vy){
+        this.parent = parent;
+        this.x = x;
+        this.y = y;
+        this.duration = parent.projectileDuration;
+        this.enemiesHit = [];
+        this.vx = vx;
+        this.vy = vy;
+      }
+
+      init(){
+        this.x = this.parent.x;
+        this.y = this.parent.y;
+        setTimeout(() => {
+          this.Destroy();
+        }, this.duration)
+      }
+
+      Destroy(){
+        this.parent.projectiles = this.parent.projectiles.filter((e)=>{
+          return e !== this;
+        })
+      }
+
+      update(){
+        this.Move();
+      }
+
+      Move(){
+        this.x += this.vx + this.parent.holder.vx;
+        this.y += this.vy + this.parent.holder.vy;
+
+        const circle = new SAT.Circle(new SAT.Vector(this.x,this.y), this.parent.radius*this.parent.size)
+
+        this.Draw(circle);
+      }
+
+      Draw(circle){
+        // const ctx = get(canvasContext);
+        // if (!ctx) return;
+        // if (!this.isActive) return;  
+
+        const ctx = null;
+        drawCircle(ctx, circle, this.parent.color);
+        this.CheckEnemyHits(circle)
+      } 
+
+      CheckEnemyHits(weapon) {
+        let hits = game.enemies.filter((e)=>{
+          const enemy = new SAT.Circle(new SAT.Vector(e.x, e.y), e.radius);
+          return checkCollision(weapon, enemy)
+        })
+
+        hits.filter(e => {
+          if (this.continuousDamage){
+            return true;
+          } else {
+            if (this.enemiesHit.includes(e)){
+              return false;
+            } else {
+              this.enemiesHit.push(e);
+              return true;
+            }
+          }
+        })
+        .forEach(e => {
+          
+          let damage = this.parent.baseDamage * this.parent.damageModifier;
+          e.TakeDamage(damage)
+          // this.ApplyOnHitEffects(e)
+          //destroy on pierce hit
+          if (this.enemiesHit.length > this.parent.pierce){
+            return this.Destroy();
+          }
+        });
+      }
+    }
+
+
+  }
+
+  init(){
+    super.init()
+    skillPool.pool.push(new LevelUp(this, this.name, this.upgradeType, "Increase level of bow by 1", this.imgSrc))
+    // this.AddAugment(new AUGMENT.ShootFireballs(0));
+  }
+
+  LevelUp(){
+    this.cooldown -= 7;
+    this.pierce += 0.5;
+    this.damageModifier += 0.3
+    this.projectileDuration += 100;
+    this.speed += 0.5;
+    this.amount += 2;
+    this.holder.speed += 0.1
+    super.LevelUp();
+  }
+
+  ReachMaxLevel(){
+    super.ReachMaxLevel();
+    this.pierce = 10;
+    this.volleys = 3;
+    // this.size = 2;
+    // this.speed = 6;
+    this.amount = 15;
+    this.baseDamage = 12;
+    // this.baseDamage = 20;
+    this.color = "rgba(240,255,183,0.5"
+  }
+
+  Draw(){
+    super.Draw();
+    this.Update();
+  }
+
+  Update(){
+    super.Update();
+    this.projectiles.forEach(element => {
+      element.update();
+    });
+  }
+
+  _FireImplementation(){
+    super._FireImplementation();
+    let numberOfEnemiesToFind = this.amount;
+
+    let i = 0;
+
+    this.SpawnVolley();
+    let interval = setInterval(() => {
+      i++
+      if (i >= this.volleys){
+        clearInterval(interval)
+        return;
+      }
+      this.SpawnVolley();
+    }, 200);
+
+  }
+
+  SpawnVolley(){
+
+    for (let index = 0; index < this.amount; index++) {
+    let v = this.CalculateVelocityDirection(index);
+
+    this.SpawnProjectile({x: v.vx, y: v.vy})
+      
+    }
+  }
+
+  SpawnProjectile(v){
+    let projectile = new this.projectile(this, this.x, this.y, v.x, v.y)
+    projectile.init();
+    this.projectiles.push(projectile)
+  }
+
+  CalculateVelocityDirection(i){
+    let dir = this.directionWhenCasting;
+
+    //calculate main angle
+    // let spread = Math.PI/8 * i
+    let angle = dir * Math.PI/2 - Math.PI/2;
+    // angle += spread;
+
+    //modified angle
+    // const spread = Math.PI/8;
+    // const halfTotal = (this.parent.amount - 1) / 2;
+    // const offset = (i - halfTotal) * (spread / halfTotal);
+    // angle += offset;
+
+    let posOrNegative = i % 2 === 0 ? 1 : -1;
+    let spread = this.spread;
+    let offset = posOrNegative * spread * i;
+    angle += offset;
+
+    let vx = Math.cos(angle) * this.speed;
+    let vy = Math.sin(angle) * this.speed;
+    return {
+      vx, vy
+    }
   }
 
 }

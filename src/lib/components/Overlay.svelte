@@ -59,6 +59,7 @@
     <div class="w-fit justify-self-end">
       {#key game.time}
       <p>HP: {roundedHealth()} / {player.maxHealth}</p>        
+      <!-- <p>XP: {player.experience} / {player.XPToNextLevel}</p>         -->
       {/key}
 
     </div>
@@ -76,8 +77,10 @@
       </div>
       <div class="flex justify-center w-full gap-2">
         <p class="text-lg">{player.level}</p>
-        <div class="flex-1 w-full relative grid">
+        <div class="flex-1 flex items-center justify-center w-full relative grid">
           <div class="absolute h-1/2 bg-purple-500 transition-all duration-100 self-center" style="width: {player.experience/player.XPToNextLevel*100}%"></div>
+          <p class="z-2">{player.experience} / {player.XPToNextLevel}</p>        
+
         </div>
         <p class="text-lg">{player.level+1}</p>
       </div>

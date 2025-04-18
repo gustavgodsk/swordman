@@ -37,6 +37,7 @@ export class ShootFireballs extends Augment {
     this.speed = 5;
     this.baseRadius = 15;
     this.radius = 15;
+    this.duration = 500;
     this.fireballs = [];
     this.direction = null;
     this.firstHit = false;
@@ -53,7 +54,7 @@ export class ShootFireballs extends Augment {
         this.parent = parent;
         this.direction = parent.direction;
         this.speed = parent.speed;
-        this.duration = 500;
+        this.duration = parent.duration;
       }
 
       init(weapon){
@@ -161,9 +162,10 @@ export class ShootFireballs extends Augment {
   EvaluateLevel(level){
     let amount = level;
     let damageModifier = 1 + level*0.3;
-    let speed = this.baseSpeed + 0.8*level;
+    let speed = this.baseSpeed + 1*level;
     let radius = this.baseRadius + 2.5*level;
-    return {amount, damageModifier, speed, radius}
+    let duration = this.duration += 50;
+    return {amount, damageModifier, speed, radius, duration}
   }
 
   LevelUp(amount = 1){
@@ -177,6 +179,7 @@ export class ShootFireballs extends Augment {
     this.damageModifier = changes.damageModifier;
     this.speed = changes.speed;
     this.radius = changes.radius;
+    this.duration = changes.duration;
 
   }
 
